@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -16,7 +15,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.taavit.scorecounter.ui.theme.ScoreCounterTheme
-import kotlin.math.ceil
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,10 +22,25 @@ import com.taavit.scorecounter.ui.ActiveScreen
 import com.taavit.scorecounter.ui.GameViewModel
 import com.taavit.scorecounter.ui.Player
 
+class Algos {
+    external fun determine_player(
+        p1Score: Byte,
+        p2Score: Byte,
+        starting: Byte
+    ): Byte
+
+    init {
+        System.loadLibrary("android_rust")
+    }
+}
+
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val algo = Algos()
+        Log.d("MATCH_APP", "Player" + algo.determine_player(1, 2, 1))
         setContent {
             ScoreCounterTheme {
                 // A surface container using the 'background' color from the theme
@@ -75,10 +88,10 @@ fun SelectScreen() {
 
 @Composable
 fun MatchScreen(
-    p1Score: Int,
-    p2Score: Int,
+    p1Score: Byte,
+    p2Score: Byte,
     servingPlayer: Player,
-    updateScore: (Player, Int) -> Unit,
+    updateScore: (Player, Byte) -> Unit,
     resetScore: () -> Unit,
 ) {
 
@@ -104,7 +117,7 @@ fun MatchScreen(
             Column (modifier = Modifier.weight(1F)) {
                 Button(
                     modifier = Modifier.padding(all=8.dp),
-                    onClick = { updateScore(Player.Player1, p1Score + 1) }
+                    onClick = { updateScore(Player.Player1, (p1Score + 1).toByte()) }
                 ) {
                     Text(
                         text=p1ScoreString,
@@ -114,7 +127,9 @@ fun MatchScreen(
                     )
                 }
                 Button(
-                    onClick = { if (p1Score > 0 ) { updateScore(Player.Player1, p1Score - 1) } },
+                    onClick = { if (p1Score > 0 ) { updateScore(Player.Player1,
+                        (p1Score - 1).toByte()
+                    ) } },
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -126,7 +141,7 @@ fun MatchScreen(
             Column (modifier = Modifier.weight(1F)) {
                 Button(
                     modifier = Modifier.padding(all=8.dp),
-                    onClick = { updateScore(Player.Player2, p2Score + 1) }
+                    onClick = { updateScore(Player.Player2, (p2Score + 1).toByte()) }
                 ) {
                     Text(
                         text=p2ScoreString,
@@ -136,7 +151,9 @@ fun MatchScreen(
                     )
                 }
                 Button(
-                    onClick = { if (p2Score > 0 ) updateScore(Player.Player2, p2Score - 1) },
+                    onClick = { if (p2Score > 0 ) updateScore(Player.Player2,
+                        (p2Score - 1).toByte()
+                    ) },
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
                     modifier = Modifier
                         .fillMaxWidth()
